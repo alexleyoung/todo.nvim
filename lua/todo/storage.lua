@@ -1,20 +1,28 @@
 -- Handles TODOs CRUD in JSON format
---
--- JSON Shape:
---
--- {
---   "list1": [
---     {"text": "Buy groceries", "completed": false},
---     {"text": "Call Alice", "completed": true}
---   ],
---   "list2": [
---     {"text": "Finish project", "completed": false}
---   ]
--- }
+
+--- @class TodoItem
+--- @field id number
+--- @field text string The content of the todo item
+--- @field completed boolean Whether the todo item is completed
+
+--- @class TodoList
+--- @field id number
+--- @field name string Name of the list
+--- @field todos TodoItem[] Todos
+
+--- @class TodoLists
+--- @field lists TodoList[] A mapping of list names to arrays of TODO items
+
+--- @class PartialTodoItem : TodoItem
+--- @field id number
+--- @field text? string The content of the todo item (optional)
+--- @field completed? boolean Whether the todo item is completed (optional)
 
 local M = {}
 
--- Load TODO data from a JSON file
+--- Loads TODO data from a JSON file.
+--- @param filepath string: Path to the JSON file.
+--- @return TodoList: Parsed todo lists, or an empty table if loading fails.
 function M.load_data(filepath)
   local file = io.open(filepath, "r")
   if not file then
@@ -46,7 +54,10 @@ function M.load_data(filepath)
   return data
 end
 
--- Save TODO data to a JSON file
+--- Saves TODO data to a JSON file.
+--- @param filepath string: Path to the JSON file.
+--- @param data TodoList: Table containing todo lists.
+--- @return boolean: `true` if saving is successful, `false` otherwise.
 function M.save_data(filepath, data)
   local file = io.open(filepath, "w")
   if not file then
@@ -54,6 +65,50 @@ function M.save_data(filepath, data)
   end
   file:write(vim.fn.json_encode(data))
   file:close()
+  return true
+end
+
+--- Creates a new todo list
+--- @param name string: Name of the list
+--- @return boolean: `true` if creation is successful, `false` otherwise.
+function M.create_list(name)
+  return true
+end
+
+--- Deletes todo list
+--- @param name string: Name of the list
+--- @return boolean: `true` if deletion is successful, `false` otherwise.
+function M.delete_list(name)
+  return true
+end
+
+--- Rename an existing todo list
+--- @param name string: Name of the list
+--- @param new_name string: New name to replace the initial name
+--- @return boolean: `true` if rename is successful, `false` otherwise.
+function M.rename_list(name, new_name)
+  return true
+end
+
+--- Creates a new todo item
+--- @param content TodoItem: Name of the list
+--- @return boolean: `true` if creation is successful, `false` otherwise.
+function M.create_todo(content)
+  return true
+end
+
+--- Deletes todo item
+--- @param id number: Name of the list
+--- @return boolean: `true` if deletion is successful, `false` otherwise.
+function M.delete_todo(id)
+  return true
+end
+
+--- Edit an existing todo
+--- @param id number: id of the todo
+--- @param content PartialTodoItem: Potentially partial TodoItem
+--- @return boolean: `true` if edit is successful, `false` otherwise.
+function M.edit_todo(id, content)
   return true
 end
 
