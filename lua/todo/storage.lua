@@ -87,14 +87,14 @@ end
 
 --- Get todo list
 --- @param name string: Name of the list
---- @return TodoList, number: List corresponding to the name, empty table if not found, and the index which it was found
+--- @return TodoList|nil, number|nil: List corresponding to the name, empty table if not found, and the index which it was found
 function M.get_list(name)
   for i, list in ipairs(M.lists) do
     if list.name == name then
       return list, i
     end
   end
-  return {}
+  return nil, nil
 end
 
 --- Rename an existing todo list
@@ -104,48 +104,25 @@ end
 function M.rename_list(name, new_name)
   local list = M.get_list(name)
 
-  if not next(list) then
-    list.name = new_name
-    return true
+  if not list then
+    return false
   end
 
-  return false
+  list.name = new_name
+  return true
 end
 
 --- Deletes todo list
 --- @param name string: Name of the list
 --- @return boolean: `true` if deletion is successful, `false` otherwise.
 function M.delete_list(name)
-  list, idx = M.get_list(name)
+  local _, idx = M.get_list(name)
 
-  if next(list) then
-    table.remove(M.lists, idx)
+  if not idx then
+    return false
   end
 
-  return true
-end
-
---- Creates a new todo item
---- @param content TodoItem: Name of the list
---- @return boolean: `true` if creation is successful, `false` otherwise.
-function M.create_todo(content)
-  return true
-end
-
---- Read todos from a list
-
---- Edit an existing todo
---- @param id number: id of the todo
---- @param content PartialTodoItem: Potentially partial TodoItem
---- @return boolean: `true` if edit is successful, `false` otherwise.
-function M.edit_todo(id, content)
-  return true
-end
-
---- Deletes todo item
---- @param id number: Name of the list
---- @return boolean: `true` if deletion is successful, `false` otherwise.
-function M.delete_todo(id)
+  table.remove(M.lists, idx)
   return true
 end
 
