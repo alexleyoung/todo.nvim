@@ -6,34 +6,36 @@
 --- @field completed boolean Whether the todo item is completed
 
 --- @class TodoList
---- @field id number
 --- @field name string Name of the list
+--- @field created_at number
 --- @field todos TodoItem[] Todos
-
---- @class TodoLists
---- @field lists TodoList[] A mapping of list names to arrays of TODO items
 
 --- @class PartialTodoItem : TodoItem
 --- @field id number
 --- @field text? string The content of the todo item (optional)
 --- @field completed? boolean Whether the todo item is completed (optional)
 
+--- @class Storage
+--- @field lists TodoList[] The in-memory table of todo lists
+
 local M = {}
 
---- Loads TODO data from a JSON file.
+--- In-mem storage of user data
+M.lists = {}
+
+--- Loads Todo data from a JSON file into M.lists.
 --- @param filepath string: Path to the JSON file.
---- @return TodoList: Parsed todo lists, or an empty table if loading fails.
 function M.load_data(filepath)
   local file = io.open(filepath, "r")
   if not file then
-    return {} -- Return an empty table if file doesn't exist
+    return -- do nothing on no saved data
   end
   local content = file:read("*a")
   file:close()
 
   local success, data = pcall(vim.fn.json_decode, content)
   if not success or type(data) ~= "table" then
-    return {} -- Return empty table if decoding fails
+    return -- do nothing if decoding fails
   end
 
   -- Ensure structure consistency
@@ -51,12 +53,12 @@ function M.load_data(filepath)
     end
   end
 
-  return data
+  M.lists = data
 end
 
 --- Saves TODO data to a JSON file.
 --- @param filepath string: Path to the JSON file.
---- @param data TodoList: Table containing todo lists.
+--- @param data TodoList[]: Table containing todo lists.
 --- @return boolean: `true` if saving is successful, `false` otherwise.
 function M.save_data(filepath, data)
   local file = io.open(filepath, "w")
@@ -72,14 +74,27 @@ end
 --- @param name string: Name of the list
 --- @return boolean: `true` if creation is successful, `false` otherwise.
 function M.create_list(name)
+  local list = {
+    name = name,
+    created_at = os.time(),
+    todos = {},
+  }
+
+  table.insert(M.lists, list)
+
   return true
 end
 
---- Deletes todo list
+--- Get todo list
 --- @param name string: Name of the list
---- @return boolean: `true` if deletion is successful, `false` otherwise.
-function M.delete_list(name)
-  return true
+--- @return TodoList, number: List corresponding to the name, empty table if not found, and the index which it was found
+function M.get_list(name)
+  for i, list in ipairs(M.lists) do
+    if list.name == name then
+      return list, i
+    end
+  end
+  return {}
 end
 
 --- Rename an existing todo list
@@ -87,6 +102,26 @@ end
 --- @param new_name string: New name to replace the initial name
 --- @return boolean: `true` if rename is successful, `false` otherwise.
 function M.rename_list(name, new_name)
+  local list = M.get_list(name)
+
+  if not next(list) then
+    list.name = new_name
+    return true
+  end
+
+  return false
+end
+
+--- Deletes todo list
+--- @param name string: Name of the list
+--- @return boolean: `true` if deletion is successful, `false` otherwise.
+function M.delete_list(name)
+  list, idx = M.get_list(name)
+
+  if next(list) then
+    table.remove(M.lists, idx)
+  end
+
   return true
 end
 
@@ -97,18 +132,20 @@ function M.create_todo(content)
   return true
 end
 
---- Deletes todo item
---- @param id number: Name of the list
---- @return boolean: `true` if deletion is successful, `false` otherwise.
-function M.delete_todo(id)
-  return true
-end
+--- Read todos from a list
 
 --- Edit an existing todo
 --- @param id number: id of the todo
 --- @param content PartialTodoItem: Potentially partial TodoItem
 --- @return boolean: `true` if edit is successful, `false` otherwise.
 function M.edit_todo(id, content)
+  return true
+end
+
+--- Deletes todo item
+--- @param id number: Name of the list
+--- @return boolean: `true` if deletion is successful, `false` otherwise.
+function M.delete_todo(id)
   return true
 end
 
