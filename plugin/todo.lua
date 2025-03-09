@@ -1,1 +1,1 @@
-require("todo.init")
+require("todo.init").setup()
