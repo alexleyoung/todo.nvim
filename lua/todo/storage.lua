@@ -63,6 +63,10 @@ end
 --- @param name string: Name of the list
 --- @return boolean: `true` if creation is successful, `false` otherwise.
 function M.create_list(name)
+  if not name:match("^%s*(.-)%s*$") then
+    return false
+  end
+
   local list = {
     name = name,
     created_at = os.time(),

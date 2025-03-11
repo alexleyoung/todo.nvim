@@ -13,7 +13,7 @@ M.open = function()
   local opts = config.window
 
   local buf = vim.api.nvim_create_buf(false, true)
-  local win = vim.api.nvim_open_win(buf, true, opts)
+  local _ = vim.api.nvim_open_win(buf, true, opts)
 
   -- TODO: reset to normal mode after refocusing buffer
   vim.api.nvim_buf_attach(buf, false, {})
@@ -40,7 +40,7 @@ M.create_list = function()
     title = "Enter list name:",
   }
 
-  local name
+  local name = ""
 
   local buf = vim.api.nvim_create_buf(false, true)
   local win = vim.api.nvim_open_win(buf, true, opts)
@@ -55,13 +55,21 @@ M.create_list = function()
   -- buf keymaps to close window
   vim.keymap.set("i", "<C-c>", function()
     vim.api.nvim_win_close(win, true)
+    vim.cmd("stopinsert")
   end, { buffer = buf, noremap = true, silent = true })
   vim.keymap.set("i", "<C-C>", function()
     vim.api.nvim_win_close(win, true)
+    vim.cmd("stopinsert")
   end, { buffer = buf, noremap = true, silent = true })
   vim.keymap.set("i", "<CR>", function()
-    storage.create_list(name)
+    if not storage.create_list(name) then
+      print("Failed to create list...")
+      return
+    end
+
+    -- TODO: add exception handling here
     vim.api.nvim_win_close(win, true)
+    vim.cmd("stopinsert")
   end, { buffer = buf, noremap = true, silent = true })
 end
 
