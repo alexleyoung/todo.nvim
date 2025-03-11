@@ -1,5 +1,7 @@
 -- Handles TODOs CRUD in JSON format
 
+local config = require("todo.config")
+
 --- @class TodoItem
 --- @field id number
 --- @field text string The content of the todo item
@@ -21,11 +23,14 @@
 local M = {}
 
 --- In-mem storage of user data
+--- @type TodoList[]
 M.lists = {}
 
+-- filepath for save data
+local filepath = config.save_location or vim.fn.stdpath("data") .. "/todo_data.json"
+
 --- Loads Todo data from a JSON file into M.lists.
---- @param filepath string: Path to the JSON file.
-function M.load_data(filepath)
+function M.load_data()
   local file = io.open(filepath, "r")
   if not file then
     return -- do nothing on no saved data
@@ -38,29 +43,13 @@ function M.load_data(filepath)
     return -- do nothing if decoding fails
   end
 
-  -- Ensure structure consistency
-  for list, todos in pairs(data) do
-    if type(todos) ~= "table" then
-      data[list] = {}
-    else
-      for i, todo in ipairs(todos) do
-        if type(todo) ~= "table" or not todo.text then
-          todos[i] = { text = tostring(todo), completed = false }
-        elseif todo.completed == nil then
-          todo.completed = false
-        end
-      end
-    end
-  end
-
   M.lists = data
 end
 
 --- Saves TODO data to a JSON file.
---- @param filepath string: Path to the JSON file.
 --- @param data TodoList[]: Table containing todo lists.
 --- @return boolean: `true` if saving is successful, `false` otherwise.
-function M.save_data(filepath, data)
+function M.save_data(data)
   local file = io.open(filepath, "w")
   if not file then
     return false -- Failed to open file

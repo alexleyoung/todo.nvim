@@ -14,6 +14,6 @@ M.window = {
   style = "minimal",
 }
 
-M.save_location = vim.fn.stdpath("data") .. "/todo.json" -- Path to store TODOs
+M.save_location = vim.fn.stdpath("data") .. "/todo_data.json" -- Path to store TODOs
 
 return M
