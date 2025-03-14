@@ -15,5 +15,6 @@ M.window = {
 }
 
 M.save_location = vim.fn.stdpath("data") .. "/todo_data.json" -- Path to store TODOs
+print(vim.fn.stdpath("data"))
 
 return M

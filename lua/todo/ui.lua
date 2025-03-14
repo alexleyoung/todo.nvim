@@ -10,21 +10,40 @@ local save_quit = function()
 end
 
 M.open = function()
-  local opts = config.window
-
   local buf = vim.api.nvim_create_buf(false, true)
-  local _ = vim.api.nvim_open_win(buf, true, opts)
+  local win = vim.api.nvim_open_win(buf, true, config.window)
+  vim.wo[win].cursorline = true
 
-  -- TODO: reset to normal mode after refocusing buffer
-  vim.api.nvim_buf_attach(buf, false, {})
+  --- render lists
+  local lists = storage.get_lists()
+  for i, list in ipairs(lists) do
+    vim.api.nvim_buf_set_lines(buf, i - 1, -1, false, { "    " .. list.name })
+  end
 
-  -- todo buf keymaps
+  --- keymaps
+  -- functions
+  vim.keymap.set("n", "a", M.create_list, { buffer = buf, noremap = true, silent = true })
+  vim.keymap.set("n", "<CR>", "<Nop>", { buffer = buf, noremap = true, silent = true })
+
   -- quit
   vim.keymap.set("n", "q", save_quit, { buffer = buf, noremap = true, silent = true })
   vim.keymap.set("n", "<C-c>", save_quit, { buffer = buf, noremap = true, silent = true })
 
-  -- make changes
-  vim.keymap.set("n", "a", M.create_list, { buffer = buf, noremap = true, silent = true })
+  -- disable non-vertical navigation
+  vim.keymap.set("n", "l", "<Nop>", { buffer = buf, noremap = true, silent = true })
+  vim.keymap.set("n", "h", "<Nop>", { buffer = buf, noremap = true, silent = true })
+  vim.keymap.set("n", "L", "<Nop>", { buffer = buf, noremap = true, silent = true })
+  vim.keymap.set("n", "H", "<Nop>", { buffer = buf, noremap = true, silent = true })
+  vim.keymap.set("n", "w", "<Nop>", { buffer = buf, noremap = true, silent = true })
+  vim.keymap.set("n", "b", "<Nop>", { buffer = buf, noremap = true, silent = true })
+  vim.keymap.set("n", "W", "<Nop>", { buffer = buf, noremap = true, silent = true })
+  vim.keymap.set("n", "B", "<Nop>", { buffer = buf, noremap = true, silent = true })
+  vim.keymap.set("n", "i", "<Nop>", { buffer = buf, noremap = true, silent = true })
+  vim.keymap.set("n", "a", "<Nop>", { buffer = buf, noremap = true, silent = true })
+  vim.keymap.set("n", "o", "<Nop>", { buffer = buf, noremap = true, silent = true })
+  vim.keymap.set("n", "I", "<Nop>", { buffer = buf, noremap = true, silent = true })
+  vim.keymap.set("n", "A", "<Nop>", { buffer = buf, noremap = true, silent = true })
+  vim.keymap.set("n", "O", "<Nop>", { buffer = buf, noremap = true, silent = true })
 end
 
 -- Creates new Todo List

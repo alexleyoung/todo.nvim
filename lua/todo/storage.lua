@@ -90,6 +90,12 @@ function M.get_list(name)
   return nil, nil
 end
 
+--- Get all todo lists
+--- @return TodoList[]: All, if any, todo lists
+function M.get_lists()
+  return M.lists
+end
+
 --- Rename an existing todo list
 --- @param name string: Name of the list
 --- @param new_name string: New name to replace the initial name
