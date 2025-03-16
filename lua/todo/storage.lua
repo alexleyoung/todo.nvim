@@ -125,4 +125,16 @@ function M.delete_list(name)
   return true
 end
 
+--- Deletes todo list by index
+--- @param idx number: Index of the list
+--- @return boolean: `true` if deletion is successful, `false` otherwise.
+function M.delete_list_idx(idx)
+  if not idx then
+    return false
+  end
+
+  table.remove(M.lists, idx)
+  return true
+end
+
 return M
