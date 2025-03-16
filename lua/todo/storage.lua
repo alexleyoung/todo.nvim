@@ -111,6 +111,19 @@ function M.rename_list(name, new_name)
   return true
 end
 
+--- Rename an existing todo list
+--- @param idx integer: Name of the list
+--- @param new_name string: New name to replace the initial name
+--- @return boolean: `true` if rename is successful, `false` otherwise.
+function M.rename_list_idx(idx, new_name)
+  if not idx or not new_name then
+    return false
+  end
+
+  M.lists[idx].name = new_name
+  return true
+end
+
 --- Deletes todo list
 --- @param name string: Name of the list
 --- @return boolean: `true` if deletion is successful, `false` otherwise.

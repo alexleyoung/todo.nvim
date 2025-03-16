@@ -6,7 +6,7 @@ local storage = require("todo.storage")
 local menu_buf
 local menu_win
 
---- Creates scratch window with exit keymaps
+--- Creates scratch buffer and window with exit keymaps
 --- comment
 --- @param opts table: Window options (see :h nvim_open_win)
 --- @return integer, integer: Buffer and window ints
@@ -14,6 +14,14 @@ local open_scratch_window = function(opts)
   local buf = vim.api.nvim_create_buf(false, true)
   local win = vim.api.nvim_open_win(buf, true, opts)
 
+  vim.keymap.set("n", "<C-c>", function()
+    vim.api.nvim_win_close(win, true)
+    vim.cmd("stopinsert")
+  end, { buffer = buf, noremap = true, silent = true })
+  vim.keymap.set("n", "<Esc>", function()
+    vim.api.nvim_win_close(win, true)
+    vim.cmd("stopinsert")
+  end, { buffer = buf, noremap = true, silent = true })
   vim.keymap.set("i", "<C-c>", function()
     vim.api.nvim_win_close(win, true)
     vim.cmd("stopinsert")
@@ -55,6 +63,7 @@ M.open = function()
   -- functions
   vim.keymap.set("n", "a", M.create_list, { buffer = menu_buf, noremap = true, silent = true })
   vim.keymap.set("n", "d", M.delete_list, { buffer = menu_buf, noremap = true, silent = true })
+  vim.keymap.set("n", "r", M.rename_list, { buffer = menu_buf, noremap = true, silent = true })
   vim.keymap.set("n", "<CR>", function()
     print("enter")
   end, { buffer = menu_buf, noremap = true, silent = true })
@@ -133,13 +142,14 @@ M.delete_list = function()
     col = 0,
     border = "single",
     style = "minimal",
-    title = "Delete '" .. list.name .. "'?",
+    title = "Delete list '" .. list.name .. "'?",
   }
 
   local buf, win = open_scratch_window(opts)
-  vim.cmd("startinsert")
-  vim.api.nvim_buf_set_lines(buf, 0, 1, false, { "y/n:  " })
-  vim.api.nvim_win_set_cursor(win, { 1, 5 })
+  local conf_string = "y/n: "
+  vim.cmd("startinsert!")
+  vim.api.nvim_buf_set_lines(buf, 0, 1, false, { conf_string })
+  vim.api.nvim_win_set_cursor(win, { 1, string.len(conf_string) })
 
   local conf
   vim.api.nvim_buf_attach(buf, false, {
@@ -150,7 +160,7 @@ M.delete_list = function()
 
   -- buf keymaps to close window
   vim.keymap.set("i", "<CR>", function()
-    if conf == "y/n: y " then
+    if conf == conf_string .. "y" then
       if not storage.delete_list_idx(curr_line) then
         print("Failed to delete")
       else
@@ -158,6 +168,52 @@ M.delete_list = function()
         render_lists(menu_buf)
       end
     end
+
+    vim.api.nvim_win_close(win, true)
+    vim.cmd("stopinsert")
+  end, { buffer = buf, noremap = true, silent = true })
+end
+
+--- Rename selected list
+M.rename_list = function()
+  local curr_line = vim.api.nvim_win_get_cursor(menu_win)[1]
+  local list = storage.lists[curr_line]
+  if not list then
+    return
+  end
+
+  local opts = {
+    relative = "cursor",
+    width = config.window.width - 2,
+    height = 1,
+    row = 0,
+    col = 0,
+    border = "single",
+    style = "minimal",
+    title = "Enter new name for list '" .. list.name .. "':",
+  }
+
+  local buf, win = open_scratch_window(opts)
+  vim.cmd("startinsert!")
+
+  local name = list.name
+  vim.api.nvim_buf_set_lines(buf, 0, 1, false, { name })
+  vim.api.nvim_win_set_cursor(win, { 1, string.len(name) })
+
+  vim.api.nvim_buf_attach(buf, false, {
+    on_lines = function()
+      name = vim.api.nvim_get_current_line()
+    end,
+  })
+
+  vim.keymap.set("i", "<CR>", function()
+    if not storage.rename_list_idx(curr_line, name) then
+      print("Failed to create list...")
+      return
+    end
+
+    -- force rerender
+    render_lists(menu_buf)
 
     -- TODO: add exception handling here
     vim.api.nvim_win_close(win, true)
