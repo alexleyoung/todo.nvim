@@ -6,6 +6,26 @@ local storage = require("todo.storage")
 local menu_buf
 local menu_win
 
+--- Creates scratch window with exit keymaps
+--- comment
+--- @param opts table: Window options (see :h nvim_open_win)
+--- @return integer, integer: Buffer and window ints
+local open_scratch_window = function(opts)
+  local buf = vim.api.nvim_create_buf(false, true)
+  local win = vim.api.nvim_open_win(buf, true, opts)
+
+  vim.keymap.set("i", "<C-c>", function()
+    vim.api.nvim_win_close(win, true)
+    vim.cmd("stopinsert")
+  end, { buffer = buf, noremap = true, silent = true })
+  vim.keymap.set("i", "<Esc>", function()
+    vim.api.nvim_win_close(win, true)
+    vim.cmd("stopinsert")
+  end, { buffer = buf, noremap = true, silent = true })
+
+  return buf, win
+end
+
 --- Save in-memory todos to file and close window
 local save_quit = function()
   storage.save_data(storage.lists)
@@ -24,9 +44,9 @@ local render_lists = function(bufr)
   end
 end
 
+--- Open Todo UI
 M.open = function()
-  menu_buf = vim.api.nvim_create_buf(false, true)
-  menu_win = vim.api.nvim_open_win(menu_buf, true, config.window)
+  menu_buf, menu_win = open_scratch_window(config.window)
   vim.wo[menu_win].cursorline = true
 
   render_lists(menu_buf)
@@ -41,8 +61,6 @@ M.open = function()
 
   -- quit
   vim.keymap.set("n", "q", save_quit, { buffer = menu_buf, noremap = true, silent = true })
-  vim.keymap.set("n", "<C-c>", save_quit, { buffer = menu_buf, noremap = true, silent = true })
-  vim.keymap.set("n", "<Esc>", save_quit, { buffer = menu_buf, noremap = true, silent = true })
 
   -- disable non-vertical navigation
   vim.keymap.set("n", "l", "<Nop>", { buffer = menu_buf, noremap = true, silent = true })
@@ -75,8 +93,7 @@ M.create_list = function()
 
   local name = ""
 
-  local buf = vim.api.nvim_create_buf(false, true)
-  local win = vim.api.nvim_open_win(buf, true, opts)
+  local buf, win = open_scratch_window(opts)
   vim.cmd("startinsert")
 
   vim.api.nvim_buf_attach(buf, false, {
@@ -85,15 +102,6 @@ M.create_list = function()
     end,
   })
 
-  -- buf keymaps to close window
-  vim.keymap.set("i", "<C-c>", function()
-    vim.api.nvim_win_close(win, true)
-    vim.cmd("stopinsert")
-  end, { buffer = buf, noremap = true, silent = true })
-  vim.keymap.set("i", "<Esc>", function()
-    vim.api.nvim_win_close(win, true)
-    vim.cmd("stopinsert")
-  end, { buffer = buf, noremap = true, silent = true })
   vim.keymap.set("i", "<CR>", function()
     if not storage.create_list(name) then
       print("Failed to create list...")
@@ -109,6 +117,7 @@ M.create_list = function()
   end, { buffer = buf, noremap = true, silent = true })
 end
 
+--- Deletes selected list
 M.delete_list = function()
   local curr_line = vim.api.nvim_win_get_cursor(menu_win)[1]
   local list = storage.lists[curr_line]
@@ -124,35 +133,22 @@ M.delete_list = function()
     col = 0,
     border = "single",
     style = "minimal",
-    title = "Delete '" .. list.name or "" .. "'?",
+    title = "Delete '" .. list.name .. "'?",
   }
 
-  local conf_buf = vim.api.nvim_create_buf(false, true)
-  local conf_win = vim.api.nvim_open_win(conf_buf, true, opts)
-  vim.api.nvim_buf_set_lines(conf_buf, 0, 1, false, { "y/n:  " })
-  vim.api.nvim_win_set_cursor(conf_win, { 1, 5 })
+  local buf, win = open_scratch_window(opts)
   vim.cmd("startinsert")
+  vim.api.nvim_buf_set_lines(buf, 0, 1, false, { "y/n:  " })
+  vim.api.nvim_win_set_cursor(win, { 1, 5 })
 
   local conf
-  vim.api.nvim_buf_attach(conf_buf, false, {
+  vim.api.nvim_buf_attach(buf, false, {
     on_lines = function()
       conf = vim.api.nvim_get_current_line()
     end,
   })
 
   -- buf keymaps to close window
-  vim.keymap.set("i", "<C-c>", function()
-    vim.api.nvim_win_close(conf_win, true)
-    vim.cmd("stopinsert")
-  end, { buffer = conf_buf, noremap = true, silent = true })
-  vim.keymap.set("i", "<C-C>", function()
-    vim.api.nvim_win_close(conf_win, true)
-    vim.cmd("stopinsert")
-  end, { buffer = conf_buf, noremap = true, silent = true })
-  vim.keymap.set("i", "<Esc>", function()
-    vim.api.nvim_win_close(conf_win, true)
-    vim.cmd("stopinsert")
-  end, { buffer = conf_buf, noremap = true, silent = true })
   vim.keymap.set("i", "<CR>", function()
     if conf == "y/n: y " then
       if not storage.delete_list_idx(curr_line) then
@@ -164,9 +160,9 @@ M.delete_list = function()
     end
 
     -- TODO: add exception handling here
-    vim.api.nvim_win_close(conf_win, true)
+    vim.api.nvim_win_close(win, true)
     vim.cmd("stopinsert")
-  end, { buffer = conf_buf, noremap = true, silent = true })
+  end, { buffer = buf, noremap = true, silent = true })
 end
 
 return M
