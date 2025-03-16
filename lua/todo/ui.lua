@@ -9,48 +9,56 @@ local save_quit = function()
   vim.api.nvim_win_close(vim.api.nvim_get_current_win(), true)
 end
 
-M.open = function()
-  local buf = vim.api.nvim_create_buf(false, true)
-  local win = vim.api.nvim_open_win(buf, true, config.window)
-  vim.wo[win].cursorline = true
-
-  --- render lists
+--- Render lists
+local render_lists = function(bufr)
   local lists = storage.get_lists()
   for i, list in ipairs(lists) do
-    vim.api.nvim_buf_set_lines(buf, i - 1, -1, false, { "    " .. list.name })
+    vim.api.nvim_buf_set_lines(bufr, i - 1, -1, false, { "    " .. list.name })
   end
+end
+
+local menu_buf
+local menu_win
+
+M.open = function()
+  menu_buf = vim.api.nvim_create_buf(false, true)
+  menu_win = vim.api.nvim_open_win(menu_buf, true, config.window)
+  vim.wo[menu_win].cursorline = true
+
+  render_lists(menu_buf)
 
   --- keymaps
   -- functions
-  vim.keymap.set("n", "a", M.create_list, { buffer = buf, noremap = true, silent = true })
-  vim.keymap.set("n", "<CR>", "<Nop>", { buffer = buf, noremap = true, silent = true })
+  vim.keymap.set("n", "a", M.create_list, { buffer = menu_buf, noremap = true, silent = true })
+  vim.keymap.set("n", "<CR>", function()
+    print("enter")
+  end, { buffer = menu_buf, noremap = true, silent = true })
 
   -- quit
-  vim.keymap.set("n", "q", save_quit, { buffer = buf, noremap = true, silent = true })
-  vim.keymap.set("n", "<C-c>", save_quit, { buffer = buf, noremap = true, silent = true })
+  vim.keymap.set("n", "q", save_quit, { buffer = menu_buf, noremap = true, silent = true })
+  vim.keymap.set("n", "<C-c>", save_quit, { buffer = menu_buf, noremap = true, silent = true })
 
   -- disable non-vertical navigation
-  vim.keymap.set("n", "l", "<Nop>", { buffer = buf, noremap = true, silent = true })
-  vim.keymap.set("n", "h", "<Nop>", { buffer = buf, noremap = true, silent = true })
-  vim.keymap.set("n", "L", "<Nop>", { buffer = buf, noremap = true, silent = true })
-  vim.keymap.set("n", "H", "<Nop>", { buffer = buf, noremap = true, silent = true })
-  vim.keymap.set("n", "w", "<Nop>", { buffer = buf, noremap = true, silent = true })
-  vim.keymap.set("n", "b", "<Nop>", { buffer = buf, noremap = true, silent = true })
-  vim.keymap.set("n", "W", "<Nop>", { buffer = buf, noremap = true, silent = true })
-  vim.keymap.set("n", "B", "<Nop>", { buffer = buf, noremap = true, silent = true })
-  vim.keymap.set("n", "i", "<Nop>", { buffer = buf, noremap = true, silent = true })
-  vim.keymap.set("n", "a", "<Nop>", { buffer = buf, noremap = true, silent = true })
-  vim.keymap.set("n", "o", "<Nop>", { buffer = buf, noremap = true, silent = true })
-  vim.keymap.set("n", "I", "<Nop>", { buffer = buf, noremap = true, silent = true })
-  vim.keymap.set("n", "A", "<Nop>", { buffer = buf, noremap = true, silent = true })
-  vim.keymap.set("n", "O", "<Nop>", { buffer = buf, noremap = true, silent = true })
+  vim.keymap.set("n", "l", "<Nop>", { buffer = menu_buf, noremap = true, silent = true })
+  vim.keymap.set("n", "h", "<Nop>", { buffer = menu_buf, noremap = true, silent = true })
+  vim.keymap.set("n", "L", "<Nop>", { buffer = menu_buf, noremap = true, silent = true })
+  vim.keymap.set("n", "H", "<Nop>", { buffer = menu_buf, noremap = true, silent = true })
+  vim.keymap.set("n", "w", "<Nop>", { buffer = menu_buf, noremap = true, silent = true })
+  vim.keymap.set("n", "b", "<Nop>", { buffer = menu_buf, noremap = true, silent = true })
+  vim.keymap.set("n", "W", "<Nop>", { buffer = menu_buf, noremap = true, silent = true })
+  vim.keymap.set("n", "B", "<Nop>", { buffer = menu_buf, noremap = true, silent = true })
+  vim.keymap.set("n", "i", "<Nop>", { buffer = menu_buf, noremap = true, silent = true })
+  vim.keymap.set("n", "o", "<Nop>", { buffer = menu_buf, noremap = true, silent = true })
+  vim.keymap.set("n", "I", "<Nop>", { buffer = menu_buf, noremap = true, silent = true })
+  vim.keymap.set("n", "A", "<Nop>", { buffer = menu_buf, noremap = true, silent = true })
+  vim.keymap.set("n", "O", "<Nop>", { buffer = menu_buf, noremap = true, silent = true })
 end
 
 -- Creates new Todo List
 M.create_list = function()
   local opts = {
     relative = "cursor",
-    width = 30,
+    width = config.window.width - 2,
     height = 1,
     row = 0,
     col = 0,
@@ -85,6 +93,9 @@ M.create_list = function()
       print("Failed to create list...")
       return
     end
+
+    -- force rerender
+    render_lists(menu_buf)
 
     -- TODO: add exception handling here
     vim.api.nvim_win_close(win, true)
