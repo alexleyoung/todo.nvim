@@ -150,4 +150,29 @@ function M.delete_list_idx(idx)
   return true
 end
 
+--- Creates new todo in list
+--- @param list TodoList
+--- @param content string
+--- @return boolean: `true` if creation is successful, `false` otherwise.
+function M.create_todo(list, content)
+  local todo = {
+    id = #list.todos,
+    text = content,
+    completed = false,
+  }
+
+  table.insert(list.todos, todo)
+
+  return true
+end
+
+--- Creates new todo in list
+--- @param todo TodoItem
+--- @return boolean: `true` if creation is successful, `false` otherwise.
+function M.toggle_completed(todo)
+  todo.completed = not todo.completed
+
+  return true
+end
+
 return M

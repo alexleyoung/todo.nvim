@@ -4,8 +4,8 @@ local M = {}
 
 -- Load default config
 M.config = require("todo.config")
-storage = require("todo.storage")
-ui = require("todo.ui")
+local storage = require("todo.storage")
+local ui = require("todo.ui")
 
 -- Setup function
 function M.setup(user_config)
