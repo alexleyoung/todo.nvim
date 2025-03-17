@@ -47,4 +47,8 @@ Disable_Navigation_Keys = function(bufnr)
   vim.keymap.set("n", "O", "<Nop>", { buffer = bufnr, noremap = true, silent = true })
   vim.keymap.set("n", "c", "<Nop>", { buffer = bufnr, noremap = true, silent = true })
   vim.keymap.set("n", "C", "<Nop>", { buffer = bufnr, noremap = true, silent = true })
+  vim.keymap.set("n", "y", "<Nop>", { buffer = bufnr, noremap = true, silent = true })
+  vim.keymap.set("n", "Y", "<Nop>", { buffer = bufnr, noremap = true, silent = true })
+  vim.keymap.set("n", "p", "<Nop>", { buffer = bufnr, noremap = true, silent = true })
+  vim.keymap.set("n", "P", "<Nop>", { buffer = bufnr, noremap = true, silent = true })
 end

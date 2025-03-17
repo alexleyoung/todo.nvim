@@ -171,7 +171,7 @@ end
 --- @param new_content string
 --- @return boolean
 function M.edit_todo_content(todo, new_content)
-  if not new_content:match("%S") then
+  if not new_content or not new_content:match("%S") then
     return false
   end
 

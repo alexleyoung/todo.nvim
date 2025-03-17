@@ -25,6 +25,7 @@ end
 --- Render lists
 local render_lists = function()
   if #storage.lists == 0 then
+    vim.api.nvim_buf_set_lines(menu_buf, 0 - 1, -1, false, { "    " })
     return
   end
 
@@ -38,6 +39,7 @@ end
 --- Render todos
 local render_todos = function()
   if #selected_list.todos == 0 then
+    vim.api.nvim_buf_set_lines(list_buf, 0 - 1, -1, false, { "    " })
     return
   end
 
@@ -51,7 +53,6 @@ end
 
 --- Open Todo UI
 M.open = function()
-  print(vim.api.nvim_get_current_win())
   menu_buf, menu_win = Open_Scratch_Window(config.window)
   vim.wo[menu_win].cursorline = true
 
@@ -221,7 +222,6 @@ end
 
 --- Open selected list
 M.open_list = function()
-  print(vim.api.nvim_get_current_win())
   local opts = {}
   for k, v in pairs(config.window) do
     opts[k] = v
@@ -334,19 +334,19 @@ M.edit_todo_content = function(new_content)
 
   local buf, win = Open_Scratch_Window(opts)
 
-  local content = selected_todo.content
-  vim.api.nvim_buf_set_lines(buf, 0, 1, false, { content })
-  vim.api.nvim_win_set_cursor(win, { 1, string.len(content) })
+  local new_content = selected_todo.content
+  vim.api.nvim_buf_set_lines(buf, 0, 1, false, { new_content })
+  vim.api.nvim_win_set_cursor(win, { 1, string.len(new_content) })
   vim.cmd("startinsert!")
 
   vim.api.nvim_buf_attach(buf, false, {
     on_lines = function()
-      content = vim.api.nvim_get_current_line()
+      new_content = vim.api.nvim_get_current_line()
     end,
   })
 
   vim.keymap.set("i", "<CR>", function()
-    if content == selected_todo.content then
+    if new_content == selected_todo.content then
       return
     end
 
@@ -397,9 +397,9 @@ M.delete_todo = function()
       print("Failed to delete")
       vim.api.nvim_win_close(win, true)
     else
-      -- force rerender
       curr_line_todo = curr_line_todo - 1
       selected_todo = selected_list.todos[curr_line_todo]
+      -- force rerender
       render_todos()
       save_quit(win)
     end
