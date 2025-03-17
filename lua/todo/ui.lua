@@ -14,6 +14,8 @@ local list_win
 local curr_line_todo = 1
 local selected_todo
 
+local Last_Opened = nil
+
 --- Save in-memory todos to file and close window
 local save_quit = function(win)
   storage.save_data(storage.lists)
@@ -49,8 +51,10 @@ end
 
 --- Open Todo UI
 M.open = function()
+  print(vim.api.nvim_get_current_win())
   menu_buf, menu_win = Open_Scratch_Window(config.window)
   vim.wo[menu_win].cursorline = true
+
   selected_list = storage.lists[curr_line]
 
   render_lists()
@@ -85,6 +89,11 @@ M.open = function()
 
   -- disable non-vertical navigation
   Disable_Navigation_Keys(menu_buf)
+
+  if Last_Opened then
+    selected_list = Last_Opened
+    M.open_list()
+  end
 end
 
 -- Creates new Todo List
@@ -212,6 +221,7 @@ end
 
 --- Open selected list
 M.open_list = function()
+  print(vim.api.nvim_get_current_win())
   local opts = {}
   for k, v in pairs(config.window) do
     opts[k] = v
@@ -222,6 +232,7 @@ M.open_list = function()
   vim.wo[list_win].cursorline = true
   curr_line_todo = 1
   selected_todo = selected_list.todos[curr_line_todo]
+  Last_Opened = selected_list
   vim.api.nvim_win_set_cursor(list_win, { curr_line_todo, 0 })
 
   render_todos()
@@ -252,6 +263,7 @@ M.open_list = function()
   vim.keymap.set("n", "q", function()
     save_quit()
     vim.api.nvim_win_set_cursor(menu_win, { curr_line, 0 })
+    Last_Opened = nil
   end, { buffer = list_buf, noremap = true, silent = true })
   vim.keymap.set("n", "Q", function()
     save_quit()
@@ -394,7 +406,7 @@ M.delete_todo = function()
   end, { buffer = buf, noremap = true, silent = true })
 
   vim.keymap.set("n", "n", function()
-    vim.api.nvim_win_close(win, true)
+    vim.api.nvim_win_close(win, false)
   end, { buffer = buf, noremap = true, silent = true })
 end
 

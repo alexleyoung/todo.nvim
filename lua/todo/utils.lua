@@ -8,18 +8,22 @@ Open_Scratch_Window = function(opts)
 
   vim.keymap.set("n", "<C-c>", function()
     vim.api.nvim_win_close(win, true)
+    Last_Opened = nil
     vim.cmd("stopinsert")
   end, { buffer = buf, noremap = true, silent = true })
   vim.keymap.set("n", "<Esc>", function()
     vim.api.nvim_win_close(win, true)
+    Last_Opened = nil
     vim.cmd("stopinsert")
   end, { buffer = buf, noremap = true, silent = true })
   vim.keymap.set("i", "<C-c>", function()
     vim.api.nvim_win_close(win, true)
+    Last_Opened = nil
     vim.cmd("stopinsert")
   end, { buffer = buf, noremap = true, silent = true })
   vim.keymap.set("i", "<Esc>", function()
     vim.api.nvim_win_close(win, true)
+    Last_Opened = nil
     vim.cmd("stopinsert")
   end, { buffer = buf, noremap = true, silent = true })
 
