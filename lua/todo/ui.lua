@@ -1,6 +1,6 @@
 local M = {}
 
-local config = require("todo.config")
+local config = require("todo").options
 local storage = require("todo.storage")
 require("todo.utils")
 
@@ -364,7 +364,7 @@ M.edit_todo_content = function()
     end
 
     -- force rerender
-    render_lists()
+    render_todos()
 
     close_prompt()
   end, { buffer = buf, noremap = true, silent = true })

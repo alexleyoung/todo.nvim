@@ -1,20 +1,22 @@
 local M = {}
 
-local vh = 0.6 -- percentage screen height
-local vw = 0.4 -- percentage screen width
-
--- Function to calculate window size dynamically
-M.window = {
-  height = math.floor(vim.o.lines * vh),
-  width = math.floor(vim.o.columns * vw),
-  row = math.floor(vim.o.lines * ((1 - vh) / 2)),
-  col = math.floor(vim.o.columns * ((1 - vw) / 2)),
-  relative = "editor",
-  border = "rounded",
-  style = "minimal",
-  title = " Lists: ",
+local defaults = {
+  window = {
+    height = math.floor(vim.o.lines * 0.6),
+    width = math.floor(vim.o.columns * 0.4),
+    row = math.floor(vim.o.lines * 0.2),
+    col = math.floor(vim.o.columns * 0.3),
+    relative = "editor",
+    border = "rounded",
+    style = "minimal",
+    title = " Lists: ",
+  },
+  save_location = vim.fn.stdpath("data") .. "/todo_data.json",
 }
 
-M.save_location = vim.fn.stdpath("data") .. "/todo_data.json" -- Path to store TODOs
+-- Function to calculate window size dynamically
+M.get_defaults = function()
+  return vim.deepcopy(defaults) -- Ensures fresh defaults every time
+end
 
 return M
