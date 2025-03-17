@@ -4,7 +4,7 @@ local config = require("todo.config")
 
 --- @class TodoItem
 --- @field id number
---- @field text string The content of the todo item
+--- @field content string The content of the todo item
 --- @field completed boolean Whether the todo item is completed
 
 --- @class TodoList
@@ -14,7 +14,7 @@ local config = require("todo.config")
 
 --- @class PartialTodoItem : TodoItem
 --- @field id number
---- @field text? string The content of the todo item (optional)
+--- @field content? string The content of the todo item (optional)
 --- @field completed? boolean Whether the todo item is completed (optional)
 
 --- @class Storage
@@ -63,7 +63,7 @@ end
 --- @param name string: Name of the list
 --- @return boolean: `true` if creation is successful, `false` otherwise.
 function M.create_list(name)
-  if not name:match("^%s*(.-)%s*$") then
+  if not name:match("%S") then
     return false
   end
 
@@ -157,7 +157,7 @@ end
 function M.create_todo(list, content)
   local todo = {
     id = #list.todos,
-    text = content,
+    content = content,
     completed = false,
   }
 
@@ -166,11 +166,35 @@ function M.create_todo(list, content)
   return true
 end
 
---- Creates new todo in list
+--- Edit todo content
+--- @param todo TodoItem
+--- @param new_content string
+--- @return boolean
+function M.edit_todo_content(todo, new_content)
+  if not new_content:match("%S") then
+    return false
+  end
+
+  todo.content = new_content
+
+  return true
+end
+
+--- Check/uncheck a todo
 --- @param todo TodoItem
 --- @return boolean: `true` if creation is successful, `false` otherwise.
 function M.toggle_completed(todo)
   todo.completed = not todo.completed
+
+  return true
+end
+
+--- Delete todo
+--- @param list TodoList: List to delete from
+--- @param idx number: Index of todo in list
+--- @return boolean
+function M.delete_todo(list, idx)
+  table.remove(list, idx)
 
   return true
 end

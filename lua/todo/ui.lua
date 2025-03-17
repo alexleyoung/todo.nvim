@@ -15,38 +15,33 @@ local curr_line_todo = 1
 local selected_todo
 
 --- Save in-memory todos to file and close window
-local save_quit = function()
+local save_quit = function(win)
   storage.save_data(storage.lists)
-  vim.api.nvim_win_close(vim.api.nvim_get_current_win(), true)
+  vim.api.nvim_win_close(win or 0, true)
 end
 
 --- Render lists
---- @param bufr integer
-local render_lists = function(bufr)
+local render_lists = function()
   if #storage.lists == 0 then
-    vim.api.nvim_buf_set_lines(bufr, 0, -1, false, { "    " })
     return
   end
 
   for i, list in ipairs(storage.lists) do
-    vim.api.nvim_buf_set_lines(bufr, i - 1, -1, false, { "  - " .. list.name })
+    vim.api.nvim_buf_set_lines(menu_buf, i - 1, -1, false, { "  - " .. list.name })
   end
 
   vim.api.nvim_win_set_cursor(menu_win, { curr_line, 0 })
 end
 
 --- Render todos
---- @param bufr integer
---- @param list TodoList
-local render_todos = function(bufr, list)
-  if #list.todos == 0 then
-    vim.api.nvim_buf_set_lines(bufr, 0, -1, false, { "    " })
+local render_todos = function()
+  if #selected_list.todos == 0 then
     return
   end
 
-  for i, todo in ipairs(list.todos) do
+  for i, todo in ipairs(selected_list.todos) do
     local indent = todo.completed and "   ■ " or "   □ "
-    vim.api.nvim_buf_set_lines(list_buf, i - 1, -1, false, { indent .. todo.text })
+    vim.api.nvim_buf_set_lines(list_buf, i - 1, -1, false, { indent .. todo.content })
   end
 
   vim.api.nvim_win_set_cursor(list_win, { curr_line_todo, 0 })
@@ -58,7 +53,7 @@ M.open = function()
   vim.wo[menu_win].cursorline = true
   selected_list = storage.lists[curr_line]
 
-  render_lists(menu_buf)
+  render_lists()
 
   --- keymaps
   -- functions
@@ -122,9 +117,6 @@ M.create_list = function()
       return
     end
 
-    -- force rerender
-    render_lists(menu_buf)
-
     -- close window
     vim.api.nvim_win_close(win, true)
     vim.cmd("stopinsert")
@@ -132,7 +124,9 @@ M.create_list = function()
     -- move cursor to new list
     curr_line = #storage.lists
     selected_list = storage.lists[curr_line]
-    vim.api.nvim_win_set_cursor(menu_win, { curr_line, 0 })
+
+    -- force rerender
+    render_lists()
   end, { buffer = buf, noremap = true, silent = true })
 end
 
@@ -150,35 +144,25 @@ M.delete_list = function()
     col = 0,
     border = "single",
     style = "minimal",
-    title = "Delete list '" .. selected_list.name .. "'?",
   }
 
   local buf, win = Open_Scratch_Window(opts)
-  local conf_string = "y/n: "
-  vim.cmd("startinsert!")
-  vim.api.nvim_buf_set_lines(buf, 0, 1, false, { conf_string })
-  vim.api.nvim_win_set_cursor(win, { 1, string.len(conf_string) })
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "Delete list '" .. selected_list.name .. "'? y/n" })
 
-  local conf
-  vim.api.nvim_buf_attach(buf, false, {
-    on_lines = function()
-      conf = vim.api.nvim_get_current_line()
-    end,
-  })
-
-  -- buf keymaps to close window
-  vim.keymap.set("i", "<CR>", function()
-    if conf == conf_string .. "y" then
-      if not storage.delete_list_idx(curr_line) then
-        print("Failed to delete")
-      else
-        -- force rerender
-        render_lists(menu_buf)
-      end
+  vim.keymap.set("n", "y", function()
+    if not storage.delete_list_idx(curr_line) then
+      print("Failed to delete")
+    else
+      -- force rerender
+      curr_line = curr_line - 1
+      selected_list = storage.lists[curr_line]
+      render_lists()
     end
+    save_quit()
+  end, { buffer = buf, noremap = true, silent = true })
 
+  vim.keymap.set("n", "n", function()
     vim.api.nvim_win_close(win, true)
-    vim.cmd("stopinsert")
   end, { buffer = buf, noremap = true, silent = true })
 end
 
@@ -219,7 +203,7 @@ M.rename_list = function()
     end
 
     -- force rerender
-    render_lists(menu_buf)
+    render_lists()
 
     vim.api.nvim_win_close(win, true)
     vim.cmd("stopinsert")
@@ -240,16 +224,13 @@ M.open_list = function()
   selected_todo = selected_list.todos[curr_line_todo]
   vim.api.nvim_win_set_cursor(list_win, { curr_line_todo, 0 })
 
-  for i, todo in ipairs(selected_list.todos) do
-    local indent = todo.completed and "   ■ " or "   □ "
-    vim.api.nvim_buf_set_lines(list_buf, i - 1, -1, false, { indent .. todo.text })
-  end
+  render_todos()
 
   --- Keymaps
   -- functions
   vim.keymap.set("n", "a", M.create_todo, { buffer = list_buf, noremap = true, silent = true })
   vim.keymap.set("n", "d", M.delete_todo, { buffer = list_buf, noremap = true, silent = true })
-  vim.keymap.set("n", "r", M.rename_todo, { buffer = list_buf, noremap = true, silent = true })
+  vim.keymap.set("n", "r", M.edit_todo_content, { buffer = list_buf, noremap = true, silent = true })
   vim.keymap.set("n", "j", function()
     if curr_line_todo < #selected_list.todos then
       curr_line_todo = curr_line_todo + 1
@@ -311,26 +292,110 @@ M.create_todo = function()
       return
     end
 
-    -- force rerender
-    render_todos(list_buf, selected_list)
-
-    vim.api.nvim_win_close(win, true)
+    save_quit(win)
     vim.cmd("stopinsert")
 
     curr_line_todo = #selected_list.todos
     selected_todo = selected_list.todos[curr_line_todo]
-    vim.api.nvim_win_set_cursor(list_win, { curr_line_todo, 0 })
+
+    -- force rerender
+    render_todos()
   end, { buffer = buf, noremap = true, silent = true })
 end
 
---- Delete selected todo
-M.delete_todo = function() end
-M.rename_todo = function() end
+--- Rename selected todo
+M.edit_todo_content = function(new_content)
+  if not selected_todo then
+    return
+  end
+
+  local opts = {
+    relative = "cursor",
+    width = config.window.width - 2,
+    height = 1,
+    row = 0,
+    col = 0,
+    border = "single",
+    style = "minimal",
+    title = "Enter new todo content:",
+  }
+
+  local buf, win = Open_Scratch_Window(opts)
+
+  local content = selected_todo.content
+  vim.api.nvim_buf_set_lines(buf, 0, 1, false, { content })
+  vim.api.nvim_win_set_cursor(win, { 1, string.len(content) })
+  vim.cmd("startinsert!")
+
+  vim.api.nvim_buf_attach(buf, false, {
+    on_lines = function()
+      content = vim.api.nvim_get_current_line()
+    end,
+  })
+
+  vim.keymap.set("i", "<CR>", function()
+    if content == selected_todo.content then
+      return
+    end
+
+    if not storage.edit_todo_content(selected_todo, new_content) then
+      print("Failed to edit todo...")
+      return
+    end
+
+    -- force rerender
+    render_lists()
+
+    vim.api.nvim_win_close(win, true)
+    vim.cmd("stopinsert")
+  end, { buffer = buf, noremap = true, silent = true })
+end
 
 --- Check/uncheck selected todo
 M.complete_todo = function()
+  if not selected_todo then
+    return
+  end
+
   storage.toggle_completed(selected_todo)
-  render_todos(list_buf, selected_list)
+  render_todos()
+end
+
+--- Delete selected todo
+M.delete_todo = function()
+  if not selected_todo then
+    return
+  end
+
+  local opts = {
+    relative = "cursor",
+    width = config.window.width - 2,
+    height = 1,
+    row = 0,
+    col = 0,
+    border = "single",
+    style = "minimal",
+  }
+
+  local buf, win = Open_Scratch_Window(opts)
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "Delete todo? y/n" })
+
+  vim.keymap.set("n", "y", function()
+    if not storage.delete_todo(selected_list.todos, curr_line_todo) then
+      print("Failed to delete")
+      vim.api.nvim_win_close(win, true)
+    else
+      -- force rerender
+      curr_line_todo = curr_line_todo - 1
+      selected_todo = selected_list.todos[curr_line_todo]
+      render_todos()
+      save_quit(win)
+    end
+  end, { buffer = buf, noremap = true, silent = true })
+
+  vim.keymap.set("n", "n", function()
+    vim.api.nvim_win_close(win, true)
+  end, { buffer = buf, noremap = true, silent = true })
 end
 
 return M
