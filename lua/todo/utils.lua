@@ -2,30 +2,14 @@
 --- comment
 --- @param opts table: Window options (see :h nvim_open_win)
 --- @return integer, integer: Buffer and window ints
-Open_Scratch_Window = function(opts)
+Open_Scratch_Window = function(opts, exit_function)
   local buf = vim.api.nvim_create_buf(false, true)
   local win = vim.api.nvim_open_win(buf, true, opts)
 
-  vim.keymap.set("n", "<C-c>", function()
-    vim.api.nvim_win_close(win, true)
-    Last_Opened = nil
-    vim.cmd("stopinsert")
-  end, { buffer = buf, noremap = true, silent = true })
-  vim.keymap.set("n", "<Esc>", function()
-    vim.api.nvim_win_close(win, true)
-    Last_Opened = nil
-    vim.cmd("stopinsert")
-  end, { buffer = buf, noremap = true, silent = true })
-  vim.keymap.set("i", "<C-c>", function()
-    vim.api.nvim_win_close(win, true)
-    Last_Opened = nil
-    vim.cmd("stopinsert")
-  end, { buffer = buf, noremap = true, silent = true })
-  vim.keymap.set("i", "<Esc>", function()
-    vim.api.nvim_win_close(win, true)
-    Last_Opened = nil
-    vim.cmd("stopinsert")
-  end, { buffer = buf, noremap = true, silent = true })
+  vim.keymap.set("n", "<C-c>", exit_function, { buffer = buf, noremap = true, silent = true })
+  vim.keymap.set("n", "<Esc>", exit_function, { buffer = buf, noremap = true, silent = true })
+  vim.keymap.set("i", "<C-c>", exit_function, { buffer = buf, noremap = true, silent = true })
+  vim.keymap.set("i", "<Esc>", exit_function, { buffer = buf, noremap = true, silent = true })
 
   return buf, win
 end

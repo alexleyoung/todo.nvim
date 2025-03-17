@@ -22,6 +22,23 @@ local save_quit = function(win)
   vim.api.nvim_win_close(win or 0, true)
 end
 
+--- Window closing logic
+local close_menu = function()
+  save_quit(menu_win)
+  Last_Opened = nil
+end
+
+local close_prompt = function()
+  vim.api.nvim_win_close(0, true)
+  vim.cmd("stopinsert")
+end
+
+local close_list = function()
+  save_quit(list_win)
+  vim.api.nvim_set_current_win(menu_win)
+  Last_Opened = nil
+end
+
 --- Render lists
 local render_lists = function()
   if #storage.lists == 0 then
@@ -53,8 +70,12 @@ end
 
 --- Open Todo UI
 M.open = function()
-  menu_buf, menu_win = Open_Scratch_Window(config.window)
-  vim.wo[menu_win].cursorline = true
+  if menu_win and vim.api.nvim_win_is_valid(menu_win) then
+    vim.api.nvim_set_current_win(menu_win)
+  else
+    menu_buf, menu_win = Open_Scratch_Window(config.window, close_menu)
+    vim.wo[menu_win].cursorline = true
+  end
 
   selected_list = storage.lists[curr_line]
 
@@ -82,11 +103,7 @@ M.open = function()
   end, { buffer = menu_buf })
 
   -- quit
-  vim.keymap.set("n", "q", save_quit, { buffer = menu_buf, noremap = true, silent = true })
-  vim.keymap.set("n", "Q", function()
-    save_quit()
-    vim.fn.execute(":q!")
-  end, { buffer = menu_buf, noremap = true, silent = true })
+  vim.keymap.set("n", "q", close_menu, { buffer = menu_buf, noremap = true, silent = true })
 
   -- disable non-vertical navigation
   Disable_Navigation_Keys(menu_buf)
@@ -112,7 +129,7 @@ M.create_list = function()
 
   local name = ""
 
-  local buf, win = Open_Scratch_Window(opts)
+  local buf, _ = Open_Scratch_Window(opts, close_prompt)
   vim.cmd("startinsert")
 
   vim.api.nvim_buf_attach(buf, false, {
@@ -128,8 +145,7 @@ M.create_list = function()
     end
 
     -- close window
-    vim.api.nvim_win_close(win, true)
-    vim.cmd("stopinsert")
+    close_prompt()
 
     -- move cursor to new list
     curr_line = #storage.lists
@@ -156,7 +172,7 @@ M.delete_list = function()
     style = "minimal",
   }
 
-  local buf, win = Open_Scratch_Window(opts)
+  local buf, _ = Open_Scratch_Window(opts, close_prompt)
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "Delete list '" .. selected_list.name .. "'? y/n" })
 
   vim.keymap.set("n", "y", function()
@@ -167,13 +183,11 @@ M.delete_list = function()
       curr_line = curr_line - 1
       selected_list = storage.lists[curr_line]
       render_lists()
+      save_quit()
     end
-    save_quit()
   end, { buffer = buf, noremap = true, silent = true })
 
-  vim.keymap.set("n", "n", function()
-    vim.api.nvim_win_close(win, true)
-  end, { buffer = buf, noremap = true, silent = true })
+  vim.keymap.set("n", "n", close_prompt, { buffer = buf, noremap = true, silent = true })
 end
 
 --- Rename selected list
@@ -193,7 +207,7 @@ M.rename_list = function()
     title = "Enter new name for list '" .. selected_list.name .. "':",
   }
 
-  local buf, win = Open_Scratch_Window(opts)
+  local buf, win = Open_Scratch_Window(opts, close_prompt)
   vim.cmd("startinsert!")
 
   local name = selected_list.name
@@ -215,8 +229,7 @@ M.rename_list = function()
     -- force rerender
     render_lists()
 
-    vim.api.nvim_win_close(win, true)
-    vim.cmd("stopinsert")
+    close_prompt()
   end, { buffer = buf, noremap = true, silent = true })
 end
 
@@ -228,7 +241,7 @@ M.open_list = function()
   end
   opts["title"] = " " .. selected_list.name .. " "
 
-  list_buf, list_win = Open_Scratch_Window(opts)
+  list_buf, list_win = Open_Scratch_Window(opts, close_list)
   vim.wo[list_win].cursorline = true
   curr_line_todo = 1
   selected_todo = selected_list.todos[curr_line_todo]
@@ -260,14 +273,10 @@ M.open_list = function()
   vim.keymap.set("n", "<CR>", M.complete_todo, { buffer = list_buf, noremap = true, silent = true })
 
   -- quit
-  vim.keymap.set("n", "q", function()
-    save_quit()
-    vim.api.nvim_win_set_cursor(menu_win, { curr_line, 0 })
-    Last_Opened = nil
-  end, { buffer = list_buf, noremap = true, silent = true })
+  vim.keymap.set("n", "q", close_list, { buffer = list_buf, noremap = true, silent = true })
   vim.keymap.set("n", "Q", function()
-    save_quit()
     vim.fn.execute(":q!")
+    vim.api.nvim_win_close(menu_win, true)
   end, { buffer = list_buf, noremap = true, silent = true })
 
   -- disable non-vertical navigation
@@ -289,7 +298,7 @@ M.create_todo = function()
 
   local content = ""
 
-  local buf, win = Open_Scratch_Window(opts)
+  local buf, _ = Open_Scratch_Window(opts, close_prompt)
   vim.cmd("startinsert")
 
   vim.api.nvim_buf_attach(buf, false, {
@@ -304,8 +313,7 @@ M.create_todo = function()
       return
     end
 
-    save_quit(win)
-    vim.cmd("stopinsert")
+    close_prompt()
 
     curr_line_todo = #selected_list.todos
     selected_todo = selected_list.todos[curr_line_todo]
@@ -316,7 +324,7 @@ M.create_todo = function()
 end
 
 --- Rename selected todo
-M.edit_todo_content = function(new_content)
+M.edit_todo_content = function()
   if not selected_todo then
     return
   end
@@ -332,7 +340,7 @@ M.edit_todo_content = function(new_content)
     title = "Enter new todo content:",
   }
 
-  local buf, win = Open_Scratch_Window(opts)
+  local buf, win = Open_Scratch_Window(opts, close_prompt)
 
   local new_content = selected_todo.content
   vim.api.nvim_buf_set_lines(buf, 0, 1, false, { new_content })
@@ -358,8 +366,7 @@ M.edit_todo_content = function(new_content)
     -- force rerender
     render_lists()
 
-    vim.api.nvim_win_close(win, true)
-    vim.cmd("stopinsert")
+    close_prompt()
   end, { buffer = buf, noremap = true, silent = true })
 end
 
@@ -389,7 +396,7 @@ M.delete_todo = function()
     style = "minimal",
   }
 
-  local buf, win = Open_Scratch_Window(opts)
+  local buf, win = Open_Scratch_Window(opts, close_prompt)
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "Delete todo? y/n" })
 
   vim.keymap.set("n", "y", function()
@@ -406,7 +413,7 @@ M.delete_todo = function()
   end, { buffer = buf, noremap = true, silent = true })
 
   vim.keymap.set("n", "n", function()
-    vim.api.nvim_win_close(win, false)
+    vim.api.nvim_win_close(win, true)
   end, { buffer = buf, noremap = true, silent = true })
 end
 
