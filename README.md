@@ -6,7 +6,7 @@ An incredibly unnecessary, probably poorly engineered, canonical pet-project, ye
 
 `todo.nvim` is a simple todo-list manager in `neovim`.
 
-<img src="https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExMGpyaGN4MXAwcXVta2NuM2p5dzYwaGFsbmpqNDNkeXNxejVpZTBhdiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/wUjCsorVekwD2ooSgj/giphy.gif" alt="demo" width="250"/> 
+<img src="https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExMGpyaGN4MXAwcXVta2NuM2p5dzYwaGFsbmpqNDNkeXNxejVpZTBhdiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/wUjCsorVekwD2ooSgj/giphy.gif" alt="demo" width="800"/> 
 
 ## Installation
 
