@@ -1,18 +1,18 @@
 # todo.nvim
 
-An incredibly unnecessary, probably poorly engineered, canonical pet-project, yet very fun and pragmatic to make, Todo-List.
+An incredibly unnecessary, probably poorly engineered, canonical pet-project, yet very fun and pragmatic to make, Todo-List App.
 
 ## What is Todo?
 
 `todo.nvim` is a simple todo-list manager in `neovim`.
 
-![demo](https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExZ3o4bjJsNDA1aTF5MjY5Y3N6Y2U1Z2V5MzR6aDFuajA1dGFoMXcwZCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/ZE3ODXf1ot3jd1PpH8/giphy.gif)
+![demo](https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExZDcxMHJhNWZhZDkzY253djQ1ZDdhc2VmejRiMXIyYmx6dmIzaWQxYSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/isPtN0HuN06Siy8ID0/giphy.gif)
 
 ## Installation
 
 Using [lazy.nvim](https://github.com/folke/lazy.nvim)
 
-```
+```lua
 return {
   'alexleyoung/todo.nvim',
   config = function()
