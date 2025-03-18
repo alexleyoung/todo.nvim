@@ -6,7 +6,7 @@ An incredibly unnecessary, probably poorly engineered, canonical pet-project, ye
 
 `todo.nvim` is a simple todo-list manager in `neovim`.
 
-<img src="https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExYXU3NTJnNXdiaTgyb3d6OG1ncGY4aHpweXlhcWlhY2JvaW9mc2V1eiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/isPtN0HuN06Siy8ID0/giphy.gif" alt="demo" width="800"/> 
+<img src="https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExMGpyaGN4MXAwcXVta2NuM2p5dzYwaGFsbmpqNDNkeXNxejVpZTBhdiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/wUjCsorVekwD2ooSgj/giphy.gif" alt="demo" width="650"/> 
 
 ## Installation
 
@@ -35,6 +35,7 @@ See [here](#Customization) for keymap customization
 | `r` | Rename list or todo |
 | `d` | Delete list or todo |
 | `q` | Quit/go back |
+| `Q` | Quit from list (will open back into list until you leave the list) |
 
 ## Customization
 
