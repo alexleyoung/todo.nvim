@@ -1,7 +1,5 @@
 -- Handles TODOs CRUD in JSON format
 
-local config = require("todo.config")
-
 --- @class TodoItem
 --- @field id number
 --- @field content string The content of the todo item
@@ -22,16 +20,27 @@ local config = require("todo.config")
 
 local M = {}
 
+--- Sort todos by completion and creation
+--- @param a TodoItem
+--- @param b TodoItem
+--- @return boolean: a < b
+local sorter = function(a, b)
+  -- return true if a is not completed and b is
+  if not a.completed and b.completed then
+    return true
+  elseif a.completed and not b.completed then
+    return false
+  end
+  return a.id < b.id
+end
+
 --- In-mem storage of user data
 --- @type TodoList[]
 M.lists = {}
 
--- filepath for save data
-local filepath = config.save_location or vim.fn.stdpath("data") .. "/todo_data.json"
-
 --- Loads Todo data from a JSON file into M.lists.
 function M.load_data()
-  local file = io.open(filepath, "r")
+  local file = io.open(require("todo").options.save_location, "r")
   if not file then
     return -- do nothing on no saved data
   end
@@ -50,7 +59,7 @@ end
 --- @param data TodoList[]: Table containing todo lists.
 --- @return boolean: `true` if saving is successful, `false` otherwise.
 function M.save_data(data)
-  local file = io.open(filepath, "w")
+  local file = io.open(require("todo").options.save_location, "w")
   if not file then
     return false -- Failed to open file
   end
@@ -162,8 +171,24 @@ function M.create_todo(list, content)
   }
 
   table.insert(list.todos, todo)
+  table.sort(list.todos, sorter)
 
   return true
+end
+
+--- Get todo by content
+--- @param list TodoList: TodoList to search in
+--- @param content string: Content to search for
+--- @return TodoItem|nil
+function M.get_todo_by_content(list, content)
+  for _, todo in ipairs(list.todos) do
+    print(content)
+    if todo.content == content then
+      return todo
+    end
+  end
+
+  return nil
 end
 
 --- Edit todo content
@@ -181,10 +206,12 @@ function M.edit_todo_content(todo, new_content)
 end
 
 --- Check/uncheck a todo
+--- @param list TodoList
 --- @param todo TodoItem
 --- @return boolean: `true` if creation is successful, `false` otherwise.
-function M.toggle_completed(todo)
+function M.toggle_completed(list, todo)
   todo.completed = not todo.completed
+  table.sort(list.todos, sorter)
 
   return true
 end

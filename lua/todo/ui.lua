@@ -70,6 +70,8 @@ end
 
 --- Open Todo UI
 M.open = function()
+  storage.load_data()
+
   if menu_win and vim.api.nvim_win_is_valid(menu_win) then
     vim.api.nvim_set_current_win(menu_win)
   else
@@ -259,7 +261,6 @@ M.open_list = function()
     if curr_line_todo < #selected_list.todos then
       curr_line_todo = curr_line_todo + 1
       vim.api.nvim_win_set_cursor(list_win, { curr_line_todo, 0 })
-      print(curr_line_todo)
       selected_todo = selected_list.todos[curr_line_todo]
     end
   end, { buffer = list_buf })
@@ -276,7 +277,7 @@ M.open_list = function()
   vim.keymap.set("n", "q", close_list, { buffer = list_buf, noremap = true, silent = true })
   vim.keymap.set("n", "Q", function()
     vim.fn.execute(":q!")
-    vim.api.nvim_win_close(menu_win, true)
+    save_quit(menu_win)
   end, { buffer = list_buf, noremap = true, silent = true })
 
   -- disable non-vertical navigation
@@ -315,8 +316,8 @@ M.create_todo = function()
 
     close_prompt()
 
-    curr_line_todo = #selected_list.todos
-    selected_todo = selected_list.todos[curr_line_todo]
+    -- curr_line_todo = #selected_list.todos
+    -- selected_todo = selected_list.todos[curr_line_todo]
 
     -- force rerender
     render_todos()
@@ -372,11 +373,12 @@ end
 
 --- Check/uncheck selected todo
 M.complete_todo = function()
-  if not selected_todo then
+  if not selected_list or not selected_todo then
     return
   end
 
-  storage.toggle_completed(selected_todo)
+  storage.toggle_completed(selected_list, selected_todo)
+  selected_todo = selected_list.todos[curr_line_todo]
   render_todos()
 end
 
