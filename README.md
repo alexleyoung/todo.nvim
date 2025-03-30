@@ -1,6 +1,6 @@
 # todo.nvim
 
-An incredibly unnecessary, probably poorly engineered, canonical pet-project, yet very fun and pragmatic to make, Todo-List App.
+An incredibly unnecessary, probably poorly engineered, canonical pet-project, yet very fun to make, Todo-List plugin.
 
 ## What is Todo?
 
