@@ -1,14 +1,21 @@
 local M = {}
 
-M.confirm_prompt = {
-  relative = "cursor",
-  width = require("todo.config").window.width - 2,
-  height = 1,
-  row = 0,
-  col = 0,
-  border = "single",
-  style = "minimal",
-}
+--- Get confirmation window base table (ex: Delete? y/n)
+M.get_prompt_win_opts = function(extension)
+  local conf_win_opts = {
+    relative = "cursor",
+    width = require("todo").options.window.width - 2,
+    height = 1,
+    row = 0,
+    col = 0,
+    border = "single",
+    style = "minimal",
+  }
+  if extension then
+    return vim.tbl_extend("force", conf_win_opts, extension)
+  end
+  return conf_win_opts
+end
 
 --- Creates scratch buffer and window with exit keymaps
 --- comment
@@ -27,7 +34,7 @@ M.open_scratch_window = function(opts, exit_function)
 end
 
 --- Disables VIM navigation motions in a buffer
-M.disable_bavigation_keys = function(bufnr)
+M.disable_navigation_keys = function(bufnr)
   -- disable non-vertical navigation
   vim.keymap.set("n", "l", "<Nop>", { buffer = bufnr, noremap = true, silent = true })
   vim.keymap.set("n", "h", "<Nop>", { buffer = bufnr, noremap = true, silent = true })
@@ -72,3 +79,5 @@ M.disable_bavigation_keys = function(bufnr)
   vim.keymap.set("v", "J", "<Nop>", { buffer = bufnr, noremap = true, silent = true })
   vim.keymap.set("v", "K", "<Nop>", { buffer = bufnr, noremap = true, silent = true })
 end
+
+return M

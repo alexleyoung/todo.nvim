@@ -75,7 +75,7 @@ M.open = function()
   if menu_win and vim.api.nvim_win_is_valid(menu_win) then
     vim.api.nvim_set_current_win(menu_win)
   else
-    menu_buf, menu_win = utils.utils.open_scratch_window(config.window, close_menu)
+    menu_buf, menu_win = utils.open_scratch_window(config.window, close_menu)
     vim.wo[menu_win].cursorline = true
   end
 
@@ -133,20 +133,9 @@ end
 
 -- Creates new Todo List
 M.create_list = function()
-  local opts = {
-    relative = "cursor",
-    width = config.window.width - 2,
-    height = 1,
-    row = 0,
-    col = 0,
-    border = "single",
-    style = "minimal",
-    title = "Enter list name:",
-  }
-
   local name = ""
 
-  local buf, _ = utils.open_scratch_window(opts, close_prompt)
+  local buf, _ = utils.open_scratch_window(utils.get_prompt_win_opts({ title = "Enter list name:" }), close_prompt)
   vim.cmd("startinsert")
 
   vim.api.nvim_buf_attach(buf, false, {
@@ -179,17 +168,7 @@ M.delete_list = function()
     return
   end
 
-  local opts = {
-    relative = "cursor",
-    width = config.window.width - 2,
-    height = 1,
-    row = 0,
-    col = 0,
-    border = "single",
-    style = "minimal",
-  }
-
-  local buf, _ = utils.open_scratch_window(opts, close_prompt)
+  local buf, _ = utils.open_scratch_window(utils.get_prompt_win_opts(), close_prompt)
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "Delete list '" .. selected_list.name .. "'? y/n" })
 
   vim.keymap.set("n", "y", function()
@@ -213,18 +192,10 @@ M.rename_list = function()
     return
   end
 
-  local opts = {
-    relative = "cursor",
-    width = config.window.width - 2,
-    height = 1,
-    row = 0,
-    col = 0,
-    border = "single",
-    style = "minimal",
-    title = "Enter new name for list '" .. selected_list.name .. "':",
-  }
-
-  local buf, win = utils.open_scratch_window(opts, close_prompt)
+  local buf, win = utils.open_scratch_window(
+    utils.get_prompt_win_opts({ title = "Enter new name for list '" .. selected_list.name .. "':" }),
+    close_prompt
+  )
   vim.cmd("startinsert!")
 
   local name = selected_list.name
@@ -315,20 +286,9 @@ end
 
 --- Create todo in selected list
 M.create_todo = function()
-  local opts = {
-    relative = "cursor",
-    width = config.window.width - 2,
-    height = 1,
-    row = 0,
-    col = 0,
-    border = "single",
-    style = "minimal",
-    title = "Type todo:",
-  }
-
   local content = ""
 
-  local buf, _ = utils.open_scratch_window(opts, close_prompt)
+  local buf, _ = utils.open_scratch_window(utils.get_prompt_win_opts({ title = "Type todo:" }), close_prompt)
   vim.cmd("startinsert")
 
   vim.api.nvim_buf_attach(buf, false, {
@@ -356,18 +316,8 @@ M.edit_todo_content = function()
     return
   end
 
-  local opts = {
-    relative = "cursor",
-    width = config.window.width - 2,
-    height = 1,
-    row = 0,
-    col = 0,
-    border = "single",
-    style = "minimal",
-    title = "Enter new todo content:",
-  }
-
-  local buf, win = utils.open_scratch_window(opts, close_prompt)
+  local buf, win =
+    utils.open_scratch_window(utils.get_prompt_win_opts({ title = "Enter new todo content:" }), close_prompt)
 
   local new_content = selected_todo.content
   vim.api.nvim_buf_set_lines(buf, 0, 1, false, { new_content })
@@ -414,17 +364,7 @@ M.delete_todo = function()
     return
   end
 
-  local opts = {
-    relative = "cursor",
-    width = config.window.width - 2,
-    height = 1,
-    row = 0,
-    col = 0,
-    border = "single",
-    style = "minimal",
-  }
-
-  local buf, win = utils.open_scratch_window(opts, close_prompt)
+  local buf, win = utils.open_scratch_window(utils.get_prompt_win_opts(), close_prompt)
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "Delete todo? y/n" })
 
   vim.keymap.set("n", "y", function()
