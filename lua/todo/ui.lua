@@ -103,9 +103,24 @@ M.open = function()
       selected_list = storage.lists[curr_line]
     end
   end, { buffer = menu_buf })
+  vim.keymap.set("v", "j", function()
+    if curr_line < #storage.lists then
+      curr_line = curr_line + 1
+      vim.api.nvim_win_set_cursor(menu_win, { curr_line, 0 })
+      selected_list = storage.lists[curr_line]
+    end
+  end, { buffer = menu_buf })
+  vim.keymap.set("v", "k", function()
+    if curr_line > 1 then
+      curr_line = curr_line - 1
+      vim.api.nvim_win_set_cursor(menu_win, { curr_line, 0 })
+      selected_list = storage.lists[curr_line]
+    end
+  end, { buffer = menu_buf })
 
   -- quit
   vim.keymap.set("n", "q", close_menu, { buffer = menu_buf, noremap = true, silent = true })
+  vim.keymap.set("n", "Q", close_menu, { buffer = menu_buf, noremap = true, silent = true })
 
   -- disable non-vertical navigation
   Disable_Navigation_Keys(menu_buf)
