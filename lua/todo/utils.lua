@@ -1,8 +1,20 @@
+local M = {}
+
+M.confirm_prompt = {
+  relative = "cursor",
+  width = require("todo.config").window.width - 2,
+  height = 1,
+  row = 0,
+  col = 0,
+  border = "single",
+  style = "minimal",
+}
+
 --- Creates scratch buffer and window with exit keymaps
 --- comment
 --- @param opts table: Window options (see :h nvim_open_win)
 --- @return integer, integer: Buffer and window ints
-Open_Scratch_Window = function(opts, exit_function)
+M.open_scratch_window = function(opts, exit_function)
   local buf = vim.api.nvim_create_buf(false, true)
   local win = vim.api.nvim_open_win(buf, true, opts)
 
@@ -14,7 +26,8 @@ Open_Scratch_Window = function(opts, exit_function)
   return buf, win
 end
 
-Disable_Navigation_Keys = function(bufnr)
+--- Disables VIM navigation motions in a buffer
+M.disable_bavigation_keys = function(bufnr)
   -- disable non-vertical navigation
   vim.keymap.set("n", "l", "<Nop>", { buffer = bufnr, noremap = true, silent = true })
   vim.keymap.set("n", "h", "<Nop>", { buffer = bufnr, noremap = true, silent = true })

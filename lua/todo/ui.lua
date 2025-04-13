@@ -2,7 +2,7 @@ local M = {}
 
 local config = require("todo").options
 local storage = require("todo.storage")
-require("todo.utils")
+local utils = require("todo.utils")
 
 local menu_buf
 local menu_win
@@ -75,7 +75,7 @@ M.open = function()
   if menu_win and vim.api.nvim_win_is_valid(menu_win) then
     vim.api.nvim_set_current_win(menu_win)
   else
-    menu_buf, menu_win = Open_Scratch_Window(config.window, close_menu)
+    menu_buf, menu_win = utils.utils.open_scratch_window(config.window, close_menu)
     vim.wo[menu_win].cursorline = true
   end
 
@@ -123,7 +123,7 @@ M.open = function()
   vim.keymap.set("n", "Q", close_menu, { buffer = menu_buf, noremap = true, silent = true })
 
   -- disable non-vertical navigation
-  Disable_Navigation_Keys(menu_buf)
+  utils.disable_navigation_keys(menu_buf)
 
   if Last_Opened then
     selected_list = Last_Opened
@@ -146,7 +146,7 @@ M.create_list = function()
 
   local name = ""
 
-  local buf, _ = Open_Scratch_Window(opts, close_prompt)
+  local buf, _ = utils.open_scratch_window(opts, close_prompt)
   vim.cmd("startinsert")
 
   vim.api.nvim_buf_attach(buf, false, {
@@ -189,7 +189,7 @@ M.delete_list = function()
     style = "minimal",
   }
 
-  local buf, _ = Open_Scratch_Window(opts, close_prompt)
+  local buf, _ = utils.open_scratch_window(opts, close_prompt)
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "Delete list '" .. selected_list.name .. "'? y/n" })
 
   vim.keymap.set("n", "y", function()
@@ -224,7 +224,7 @@ M.rename_list = function()
     title = "Enter new name for list '" .. selected_list.name .. "':",
   }
 
-  local buf, win = Open_Scratch_Window(opts, close_prompt)
+  local buf, win = utils.open_scratch_window(opts, close_prompt)
   vim.cmd("startinsert!")
 
   local name = selected_list.name
@@ -258,7 +258,7 @@ M.open_list = function()
   end
   opts["title"] = " " .. selected_list.name .. " "
 
-  list_buf, list_win = Open_Scratch_Window(opts, close_list)
+  list_buf, list_win = utils.open_scratch_window(opts, close_list)
   vim.wo[list_win].cursorline = true
   curr_line_todo = 1
   selected_todo = selected_list.todos[curr_line_todo]
@@ -286,6 +286,20 @@ M.open_list = function()
       selected_todo = selected_list.todos[curr_line_todo]
     end
   end, { buffer = list_buf })
+  vim.keymap.set("v", "j", function()
+    if curr_line_todo < #selected_list.todos then
+      curr_line_todo = curr_line_todo + 1
+      vim.api.nvim_win_set_cursor(list_win, { curr_line_todo, 0 })
+      selected_todo = selected_list.todos[curr_line_todo]
+    end
+  end, { buffer = list_buf })
+  vim.keymap.set("v", "k", function()
+    if curr_line_todo > 1 then
+      curr_line_todo = curr_line_todo - 1
+      vim.api.nvim_win_set_cursor(list_win, { curr_line_todo, 0 })
+      selected_todo = selected_list.todos[curr_line_todo]
+    end
+  end, { buffer = list_buf })
   vim.keymap.set("n", "<CR>", M.complete_todo, { buffer = list_buf, noremap = true, silent = true })
 
   -- quit
@@ -296,7 +310,7 @@ M.open_list = function()
   end, { buffer = list_buf, noremap = true, silent = true })
 
   -- disable non-vertical navigation
-  Disable_Navigation_Keys(list_buf)
+  utils.disable_navigation_keys(list_buf)
 end
 
 --- Create todo in selected list
@@ -314,7 +328,7 @@ M.create_todo = function()
 
   local content = ""
 
-  local buf, _ = Open_Scratch_Window(opts, close_prompt)
+  local buf, _ = utils.open_scratch_window(opts, close_prompt)
   vim.cmd("startinsert")
 
   vim.api.nvim_buf_attach(buf, false, {
@@ -329,13 +343,10 @@ M.create_todo = function()
       return
     end
 
-    close_prompt()
-
-    -- curr_line_todo = #selected_list.todos
-    -- selected_todo = selected_list.todos[curr_line_todo]
-
     -- force rerender
     render_todos()
+
+    close_prompt()
   end, { buffer = buf, noremap = true, silent = true })
 end
 
@@ -356,7 +367,7 @@ M.edit_todo_content = function()
     title = "Enter new todo content:",
   }
 
-  local buf, win = Open_Scratch_Window(opts, close_prompt)
+  local buf, win = utils.open_scratch_window(opts, close_prompt)
 
   local new_content = selected_todo.content
   vim.api.nvim_buf_set_lines(buf, 0, 1, false, { new_content })
@@ -413,7 +424,7 @@ M.delete_todo = function()
     style = "minimal",
   }
 
-  local buf, win = Open_Scratch_Window(opts, close_prompt)
+  local buf, win = utils.open_scratch_window(opts, close_prompt)
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, { "Delete todo? y/n" })
 
   vim.keymap.set("n", "y", function()
